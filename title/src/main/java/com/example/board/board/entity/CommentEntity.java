@@ -3,20 +3,19 @@ package com.example.board.board.entity;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Table( name = "ct")
 @Data
+@Table(name = "ct")
 public class CommentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(length = 10)
     private String name;
-
-    @Column(length = 50)
     private String content;
+    private LocalDateTime dateSaver;
 
     @ManyToOne
     @JoinColumn(name="boardId")
@@ -25,4 +24,5 @@ public class CommentEntity {
     public void setBoard(BoardEntity boardEntity) {
         this.boardEntity = boardEntity;
     }
+
 }

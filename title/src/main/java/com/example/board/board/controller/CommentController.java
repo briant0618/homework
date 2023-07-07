@@ -1,53 +1,52 @@
 package com.example.board.board.controller;
 
+
 import com.example.board.board.entity.BoardEntity;
 import com.example.board.board.entity.CommentEntity;
 import com.example.board.board.service.BoardService;
 import com.example.board.board.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
+
 
 @Controller
-@RequestMapping("/board/detail")
 public class CommentController {
-    private final BoardService boardService;
-    private final CommentService commentService;
-
     @Autowired
-    public CommentController(BoardService boardService, CommentService commentService) {
-        this.boardService = boardService;
-        this.commentService = commentService;
-    }
-    @GetMapping("/{boardId}/comments")
-    public String getBoardDetail(@PathVariable("boardId") Integer boardId, Model model) {
-        BoardEntity board = boardService.getBoardById(boardId);
-        if (board == null) {
-            throw new BoardService.BoardNotFoundException();
-        }
-        // 게시글 정보를 Model에 추가합니다.
-        model.addAttribute("board", board);
+    private CommentService commentService;
+    private BoardService boardService;
 
-        // 게시글에 대한 댓글 목록을 가져와서 Model에 추가합니다.
-        List<CommentEntity> comments = commentService.getCommentsByBoardId(boardId);
-        model.addAttribute("comments", comments);
-
-        return "board/detail/{boardId}" ;
+    //댓글 등록
+    @PostMapping("/boardview/{boardId}")
+    public String addComment(@ModelAttribute CommentEntity commentEntity,
+                             @PathVariable("boardId") Integer boardId,
+                             @RequestParam(value="page", defaultValue = "0") int page,
+                             @RequestParam(value="searchKeyword", required = false) String searchKeyword) {
+        BoardEntity boardEntity = boardService.boardView(boardId);  // 해당하는 Board를 가져옴
+        commentEntity.setBoard(boardEntity);  // Comment가 어떤 Board에 속하는지 설정
+        commentService.saveComment(commentEntity);
+        String encodedSearchKeyword = URLEncoder.encode(searchKeyword, StandardCharsets.UTF_8);
+        System.out.println("댓글이 작성 되었습니다.");
+        return "redirect:/boardview/" + boardId + "?page=" + page + "&searchKeyword=" + encodedSearchKeyword;
     }
 
 
-    @PostMapping("/{boardId}/comments")
-    public String createComment(@PathVariable("boardId") Integer boardId, CommentEntity comment) {
-        BoardEntity board = boardService.getBoardById(boardId);
-        if (board == null) {
-            throw new BoardService.BoardNotFoundException();
-        }
-        comment.setBoardEntity(board);
-        commentService.createComment(comment, boardId);
-
-        return "redirect:/board/detail/" + boardId;
+    // 댓글 삭제 기능
+    @PostMapping("/deleteComment/{commentId}")
+    public String deleteComment(@PathVariable("commentId") Integer commentId,
+                                @RequestParam(value = "page", defaultValue = "0") int page,
+                                @RequestParam(value = "searchKeyword", defaultValue = "") String searchKeyword) {
+        CommentEntity commentEntity = commentService.boardIdFinder(commentId);
+        Integer boardId = commentEntity.getBoardEntity().getId();
+        commentService.deleteById(commentId);
+        String encodedSearchKeyword = URLEncoder.encode(searchKeyword, StandardCharsets.UTF_8);
+        System.out.println("댓글이 삭제 되었습니다.");
+        return "redirect:/boardview/" + boardId + "?page=" + page + "&searchKeyword=" + encodedSearchKeyword;
     }
 
 }
+

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <title>detailView</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<style>
+    .btn btn-outline-dark{
+        background-color: black;
+    }
+    .table{
+        border-bottom: 1px solid skyblue;
+    }
+    .table tr th{
+        border-right: 1px solid skyblue;
+        width: 120px;
+    }
+    .comment-list {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+    }
+
+    .comment-list ul {
+        list-style-type: none;
+    }
+
+    .comment-list li {
+        margin-bottom: 8px;
+    }
+
+    .comment-list li strong {
+        font-weight: bold;
+    }
+
+    .comment-list li p {
+        margin: 0;
+    }
+
+    .comment-list li button {
+        margin-left: 8px;
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        padding: 2px 8px;
+        cursor: pointer;
+    }
+
+</style>
+<body>
+<div class="container ">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-8">
+            <div class="fool">
+                <div class="card-body">
+                    <h1 onclick="location.href='/list'"> 상품 상세 페이지</h1>
+                    <div class="tableSet" style="display: flex">
+                        <div class="imageSet">
+                            <img src="/img/random/1.png" id="Slide" width="200" height="300">
+                        </div>
+                        <table class="table">
+                            <tr>
+                                <th>ID</th>
+                                <td th:text="${board.id}"></td>
+                            </tr>
+                            <tr>
+                                <th>Name</th>
+                                <td th:text="${board.name}"></td>
+                            </tr>
+                            <tr>
+                                <th>Price</th>
+                                <td th:text="${board.price + '원'}"></td>
+                            </tr>
+                            <tr>
+                                <th>Content</th>
+                                <td th:text="${board.content}" class="textbox"></td>
+                            </tr>
+                            <tr>
+                                <th>Date</th>
+                                <td>
+                                    <a th:if="${board.date != null}" th:text="${#temporals.format(board.date, 'yyyy-MM-dd HH:mm:ss')}"></a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-center" role="group" aria-label="Basic outlined example">
+                        <form th:action="@{/modify/{id}(id=${board.id})}" method="get" class="inline-form">
+                            <input type="hidden" name="page" th:value="${param.page}">
+                            <input type="hidden" name="searchKeyword" th:value="${searchKeyword}">
+                            <button type="submit" class="btn btn-outline-dark">수정</button>
+                        </form>
+                        <form id="deleteForm"  method="post">
+                            <input type="hidden" id="boardIdInput" th:value="${board.id}">
+                            <button><a th:href="@{/delete(id=${board.id})}" class="btn btn-outline-dark">삭제</a></button>
+                        </form>
+                        <form th:action="@{/list}" method="get" class="inline-form">
+                            <input type="hidden" name="page" th:value="${param.page}">
+                            <input type="hidden" name="searchKeyword" th:value="${searchKeyword}">
+                            <button type="submit" class="btn btn-outline-dark">목록</button>
+                        </form>
+                    </div>
+                    <div class="mt-8">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Content</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="comment : ${comments}">
+                                <td th:text="${comment.name}"></td>
+                                <td th:text="${comment.content}"></td>
+                                <td>
+                                    <form th:action="@{/deleteComment/{commentId}(commentId=${comment.id},page=${CurrentPage},searchKeyword=${searchKeyword})}" method="post">
+                                        <button class="btn btn-primary" type="submit">삭제</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Form fields -->
+                    <form th:action="@{/boardview/{boardId}(boardId=${board.id})}" th:object="${comment}" method="post">
+                        <input type="hidden" name="page" th:value="${currentPage}">
+                        <input type="hidden" name="searchKeyword" th:value="${searchKeyword}">
+                        <div class="mb-8">
+                            <label for="name">Name:</label><br>
+                            <input type="text" id="name" name="name" th:field="*{name}">
+                        </div>
+                        <div class="mb-8">
+                            <label for="content">Content:</label><br>
+                            <textarea id="content" name="content" rows="4" cols="50" th:field="*{content}"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">댓글 등록</button>
+                        <button type="button" class="btn btn-primary" onclick="window.history.back()">취소</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    // 랜덤 이미지 삽입
+    window.addEventListener('DOMContentLoaded', function() {
+        let slide = document.getElementById("Slide");
+        let imgArr = ["/img/random/1.png","/img/random/2.png","/img/random/3.png","/img/random/4.png",
+            "/img/random/5.jpg","/img/random/6.png", "/img/random/7.jpg", "/img/random/8.png","/img/random/9.png",
+            "/img/random/10.png","/img/random/11.png","/img/random/12.png","/img/random/13.png","/img/random/14.png","/img/random/15.jpg",
+            "/img/random/16.jpeg","/img/random/17.png"];
+
+        let ranNum = Math.floor(Math.random() * imgArr.length);
+        slide.src = imgArr[ranNum];
+    });
+</script>
+
+</body>
+</html>

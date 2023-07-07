@@ -1,198 +1,140 @@
 package com.example.board.board.controller;
 
+
 import com.example.board.board.entity.BoardEntity;
+import com.example.board.board.entity.CommentEntity;
 import com.example.board.board.service.BoardService;
+import com.example.board.board.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
-public class BoardController {
-
-    private final BoardService boardService;
+public class BoardController{
 
     @Autowired
-    public BoardController(BoardService boardService) {
-        this.boardService = boardService;
+    private BoardService boardService;
+    private CommentService commentService;
+
+    // write 이동
+    @GetMapping("/write")
+    public String writeMove(){
+        return "boardwrite";
     }
 
-    // Paging Mapping
-    @GetMapping("/")
-    public String index(Model model, @RequestParam(value = "page", defaultValue = "1") Integer page,
-                        @RequestParam(value = "searchKeyword", required = false) String searchKeyword,
-                        @RequestParam(value = "search", required = false) String search){
-        try {
-            int pageSize = 10;
-            if (page == null || page <= 0) {
-                page = 1;
-            }
+    // writeform
+    @PostMapping("/board/writepro")
+    public String boardWrite(BoardEntity board, Model model){
+        board.setDate(LocalDateTime.now());
+        boardService.write(board);
+        model.addAttribute("url","/list");
+        return "redirect:/list";
+    }
 
-            Pageable pageable = PageRequest.of(page - 1, pageSize);
-            Page<BoardEntity> boardPage = boardService.getAllBoardsPaged(pageable);
-            List<BoardEntity> boards = boardPage.getContent();
-            int totalPages = boardPage.getTotalPages();
 
-            model.addAttribute("boards", boards);
-            int displayPageCount = 5;
-            int currentPage = page; // 현재 페이지
-            int startPage = Math.max(1, currentPage - (displayPageCount / 2));
-            int endPage = Math.min(startPage + displayPageCount - 1, totalPages);
-
-            model.addAttribute("totalPages", totalPages != 0 ? totalPages : 1);
-            model.addAttribute("currentPage", page);
-            model.addAttribute("startPage", startPage);
-            model.addAttribute("endPage", endPage);
-
-            return "index";
-
-        } catch (Exception e) {
-            // 예외 처리 로직 추가
-            model.addAttribute("errorMessage", "An error occurred while loading the board list.");
-            return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
+    //list 이동
+    @GetMapping("/list")
+    public String listMove(Model model,
+                            @PageableDefault(page = 0,
+                                             size = 8,
+                                             sort = "id",
+                                             direction = Sort.Direction.DESC)
+                            Pageable pageable, String searchKeyword){
+        Page<BoardEntity> list = null;
+        if (searchKeyword == null || searchKeyword.isEmpty()) {
+            list = boardService.boardList(pageable);
+        } else {
+            list = boardService.boardSearchByName(searchKeyword, pageable);
         }
+
+        // yyyy-mm-dd 와 hh 중간에 T가나오는 현상 수정
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        List<String> formattedDates = list.getContent().stream()
+                .map(board -> board.getDate().format(formatter))
+                .collect(Collectors.toList());
+
+
+
+        int CurrentPage = list.getPageable().getPageNumber() + 1;
+        int startPage = Math.max(CurrentPage -1 , 1);
+        int endPage = Math.min(startPage + 3, list.getTotalPages()); // 수정: endPage 제한
+
+        boolean Previous = CurrentPage > 1;
+        boolean Next = CurrentPage < list.getTotalPages() && CurrentPage < endPage; // 수정: Next 버튼 제한
+
+        model.addAttribute("list",list);
+        model.addAttribute("CurrentPage", CurrentPage);
+        model.addAttribute("startPage",startPage);
+        model.addAttribute("endPage",endPage);
+        model.addAttribute("Previous", Previous);
+        model.addAttribute("Next", Next);
+        model.addAttribute("formattedDates", formattedDates);
+
+
+        return "boardList";
     }
 
-    // Search Paging Mapping
-    @GetMapping("/search")
-    public String searchList(
-            @RequestParam(value = "searchKeyword", required = false) String searchKeyword,
-            @RequestParam(value = "search", required = false) String search,
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            Model model) {
-        try {
-            // 검색 키워드와 페이징 정보를 이용하여 검색 결과를 가져옴
-            Page<BoardEntity> boardPage = searchKeyword != null ? boardService.searchBoardPaged(searchKeyword, page) : boardService.searchBoardPaged(null, page);
-            List<BoardEntity> searchedBoards = boardPage.getContent();
-            int totalPages = boardPage.getTotalPages();
-
-            // 페이지 버튼 표시를 위한 시작 페이지와 끝 페이지 계산
-            int displayPageCount = 5;
-            int startPage = Math.max(1, page - (displayPageCount / 2));
-            int endPage = Math.min(startPage + displayPageCount - 1, totalPages);
-
-            model.addAttribute("boards", searchedBoards);
-            model.addAttribute("totalPages", totalPages);
-            model.addAttribute("currentPage", page);
-            model.addAttribute("searchKeyword", searchKeyword);
-            model.addAttribute("search", search);
-
-            model.addAttribute("startPage", startPage);
-            model.addAttribute("endPage", endPage);
-
-            return "index";
-        } catch (Exception e) {
-            // 예외 처리 로직 추가
-            model.addAttribute("errorMessage", "An error occurred while searching the board list.");
-            return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-        }
+    // 상세페이지 보기
+    @GetMapping("/boardview/{id}")
+    public String viewMove(@PathVariable("id") Integer id,
+                           @RequestParam(value="page", defaultValue = "0") int CurrentPage,
+                           @RequestParam(value="searchKeyword", defaultValue = "") String searchKeyword,
+                           Model model) {
+        BoardEntity board = boardService.boardView(id);
+        model.addAttribute("comments", board.getCommentEntity());  // Model에 "comments"라는 이름으로 게시글의 댓글들을 추가합니다.
+        model.addAttribute("comment", new CommentEntity()); // New Comment object for the form
+        model.addAttribute("board", board);
+        model.addAttribute("CurrentPage", CurrentPage);
+        model.addAttribute("searchKeyword", searchKeyword);
+        return "/boardview";  // "/boardview"라는 이름의 뷰(view)를 반환합니다.
     }
 
-    // Detail Page Mapping
-    @GetMapping("/board/detail/{id}")
-    public String BoardDetail(@PathVariable("id") int id, Model model) {
-        try {
-            List<BoardEntity> boards = boardService.getAllBoards();
 
-            // id에 해당하는 BoardEntity 객체 찾기
-            BoardEntity board = boards.stream().filter(b -> b.getId() == id).findFirst().orElse(null);
-            if (board != null) {
-                model.addAttribute("board", board);
-                return "/board/detail";
-            } else {
-                // 예외 처리 로직 추가
-                model.addAttribute("errorMessage", "The requested board does not exist.");
-                return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-            }
-        } catch (Exception e) {
-            // 예외 처리 로직 추가
-            model.addAttribute("errorMessage", "An error occurred while loading the board detail.");
-            return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-        }
+    // 게시글 삭제
+    @GetMapping("/delete")  // GET 요청을 "/delete" URL로 매핑하는 어노테이션입니다.
+    public String boardDelete(Integer id){
+        boardService.boardDelete(id);  // 해당 id의 게시글을 삭제합니다.
+        return "redirect:/list";  // 삭제 후 "/list" URL로 리다이렉트합니다.
     }
 
-    // Insert
-    @GetMapping("/board/regist")
-    public String Regist() {
-        return "board/regist";
+    // 수정 게시판 이동
+    @GetMapping("/modify/{id}")
+    public String modifyMove(@PathVariable("id") Integer id,
+                         @RequestParam(value="page", defaultValue = "0") int nowPage,
+                         @RequestParam(value="searchKeyword", defaultValue = "") String searchKeyword,
+                         Model model){
+        model.addAttribute("board",boardService.boardView(id));
+        model.addAttribute("nowPage", nowPage); // 현재 페이지 번호를 모델에 추가
+        model.addAttribute("searchKeyword", searchKeyword); // 검색 키워드를 모델에 추가
+        return "boardmodify";  // "boardmodify"라는 이름의 뷰(view)를 반환합니다.
     }
 
-    @PostMapping("/submit-form")
-    public String submitForm(@ModelAttribute BoardEntity boardEntity, Model model) {
-        try {
-            String dateTime = LocalDateTime.now().toString(); // 현재 시간을 문자열로 가져옴
-            boardEntity.setDate(dateTime);
-            boardService.insertBoard(boardEntity);
-            return "redirect:/";
-        } catch (Exception e) {
-            // 예외 처리 로직 추가
-            model.addAttribute("errorMessage", "An error occurred while submitting the board.");
-            return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-        }
-    }
+    // 수정작업
+    @PostMapping("/update/{id}")
+    public String update(@PathVariable("id") Integer id,
+                         BoardEntity board,
+                         @RequestParam(value="page", defaultValue = "0") int page,
+                         @RequestParam(value="searchKeyword", required = false) String searchKeyword) {
 
-    // Update
-    @GetMapping("/board/update/{id}")
-    public String showUpdateForm(@PathVariable("id") int id, Model model) {
-        try {
-            // 게시글 ID를 통해 해당 게시글을 가져옵니다.
-            List<BoardEntity> boards = boardService.getAllBoards();
-            BoardEntity board = boards.stream().filter(b -> b.getId() == id).findFirst().orElse(null);
-            if (board != null) {
-                model.addAttribute("board", board);
-                return "board/update";
-            } else {
-                // 예외 처리 로직 추가
-                model.addAttribute("errorMessage", "The requested board does not exist.");
-                return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-            }
-        } catch (Exception e) {
-            // 예외 처리 로직 추가
-            model.addAttribute("errorMessage", "An error occurred while loading the board update form.");
-            return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-        }
-    }
-
-    @PostMapping("/board/update/{id}")
-    public String updateBoard(@PathVariable("id") int id, @ModelAttribute BoardEntity updatedBoard, Model model) {
-        try {
-            List<BoardEntity> boards = boardService.getAllBoards();
-            BoardEntity existingBoard = boards.stream().filter(b -> b.getId() == id).findFirst().orElse(null);
-            if (existingBoard != null) {
-                existingBoard.setName(updatedBoard.getName());
-                existingBoard.setPrice(updatedBoard.getPrice());
-                existingBoard.setContent(updatedBoard.getContent());
-
-                boardService.updateBoard(existingBoard);
-                return "redirect:/board/detail/" + id;
-            } else {
-                // 예외 처리 로직 추가
-                model.addAttribute("errorMessage", "The requested board does not exist.");
-                return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-            }
-        } catch (Exception e) {
-            // 예외 처리 로직 추가
-            model.addAttribute("errorMessage", "An error occurred while updating the board.");
-            return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-        }
-    }
-
-    // Delete
-    @PostMapping("/board/detail/{id}")
-    public String deleteBoard(@PathVariable("id") int id, Model model) {
-        try {
-            boardService.deleteBoard(id);
-            return "redirect:/";
-        } catch (Exception e) {
-            // 예외 처리 로직 추가
-            model.addAttribute("errorMessage", "An error occurred while deleting the board.");
-            return "error"; // error.html로 리다이렉트 또는 에러 페이지를 반환하도록 수정해야 할 수 있습니다.
-        }
+           BoardEntity boardTemp = boardService.boardView(id);
+           boardTemp.setName(board.getName());
+           boardTemp.setPrice(board.getPrice());
+           boardTemp.setContent(board.getContent());
+           boardService.write(boardTemp);
+        return "redirect:/boardview/" + id + "?page=" + page + "&searchKeyword=" + searchKeyword;
     }
 }

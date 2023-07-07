@@ -1,39 +1,32 @@
 package com.example.board.board.service;
 
-import com.example.board.board.entity.BoardEntity;
 import com.example.board.board.entity.CommentEntity;
 import com.example.board.board.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 
 @Service
 public class CommentService {
-    private final CommentRepository commentRepository;
-    private final BoardService boardService;
-
-
     @Autowired
-    public CommentService(CommentRepository commentRepository, BoardService boardService) {
-        this.commentRepository = commentRepository;
-        this.boardService = boardService;
+    private CommentRepository commentRepository;
+
+
+    public CommentEntity boardIdFinder(Integer boardId){
+        return commentRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 댓글이 존재하지 않습니다. boardId=" + boardId));
     }
 
-    // BoardEntity의 id값 받아오기
-    public List<CommentEntity> getCommentsByBoardId(Integer boardId) {
-        return commentRepository.findByBoardEntityId(boardId);
+    //
+    public CommentEntity saveComment(CommentEntity commentEntity){
+        commentEntity.setDateSaver(LocalDateTime.now());
+        return commentRepository.save(commentEntity);
     }
-
-    // Comment 조회 및 반환
-    public CommentEntity createComment(CommentEntity comment, Integer boardId) {
-
-        BoardEntity board = boardService.getBoardById(boardId);
-        comment.setBoardEntity(board);
-        return commentRepository.save(comment);
-
+    //댓글 삭제
+    public void deleteById(Integer boardId) {
+        commentRepository.deleteById(boardId);
     }
-
 
 }
