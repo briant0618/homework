@@ -4,7 +4,6 @@ package com.example.board.board.controller;
 import com.example.board.board.entity.BoardEntity;
 import com.example.board.board.entity.CommentEntity;
 import com.example.board.board.service.BoardService;
-import com.example.board.board.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.domain.Page;
@@ -28,7 +27,8 @@ public class BoardController{
 
     @Autowired
     private BoardService boardService;
-    private CommentService commentService;
+
+
 
     // write 이동
     @GetMapping("/write")
@@ -114,11 +114,11 @@ public class BoardController{
     // 수정 게시판 이동
     @GetMapping("/modify/{id}")
     public String modifyMove(@PathVariable("id") Integer id,
-                         @RequestParam(value="page", defaultValue = "0") int nowPage,
+                         @RequestParam(value="page", defaultValue = "0") int CurrentPage,
                          @RequestParam(value="searchKeyword", defaultValue = "") String searchKeyword,
                          Model model){
         model.addAttribute("board",boardService.boardView(id));
-        model.addAttribute("nowPage", nowPage); // 현재 페이지 번호를 모델에 추가
+        model.addAttribute("CurrentPage", CurrentPage); // 현재 페이지 번호를 모델에 추가
         model.addAttribute("searchKeyword", searchKeyword); // 검색 키워드를 모델에 추가
         return "boardmodify";  // "boardmodify"라는 이름의 뷰(view)를 반환합니다.
     }

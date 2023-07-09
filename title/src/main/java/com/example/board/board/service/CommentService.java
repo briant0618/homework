@@ -14,6 +14,7 @@ public class CommentService {
     private CommentRepository commentRepository;
 
 
+
     public CommentEntity boardIdFinder(Integer boardId){
         return commentRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 댓글이 존재하지 않습니다. boardId=" + boardId));

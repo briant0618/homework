@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 public class CommentController {
     @Autowired
     private CommentService commentService;
+    @Autowired
     private BoardService boardService;
 
     //댓글 등록
@@ -25,9 +26,9 @@ public class CommentController {
     public String addComment(@ModelAttribute CommentEntity commentEntity,
                              @PathVariable("boardId") Integer boardId,
                              @RequestParam(value="page", defaultValue = "0") int page,
-                             @RequestParam(value="searchKeyword", required = false) String searchKeyword) {
-        BoardEntity boardEntity = boardService.boardView(boardId);  // 해당하는 Board를 가져옴
-        commentEntity.setBoard(boardEntity);  // Comment가 어떤 Board에 속하는지 설정
+                             @RequestParam(value="searchKeyword", defaultValue = "") String searchKeyword) {
+        BoardEntity boardEntity = boardService.boardView(boardId);
+        commentEntity.setBoard(boardEntity);
         commentService.saveComment(commentEntity);
         String encodedSearchKeyword = URLEncoder.encode(searchKeyword, StandardCharsets.UTF_8);
         System.out.println("댓글이 작성 되었습니다.");
