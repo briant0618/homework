@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class BoardService {
     @Autowired
     private BoardRepository boardRepository;
+    @Autowired
+    private CommentRepository commentRepository;
 
 
     // 게시판 Write
@@ -29,15 +31,23 @@ public class BoardService {
             return boardRepository.findAll(pageable);
     }
 
-    // 게시판 수정페이지 이동
+    // 게시판 상세페이지 이동
     public BoardEntity boardView(Integer id){
         return boardRepository.findById(id).get();
     }
 
 
     // 게시판 삭제
-    public void boardDelete(Integer id){
-        boardRepository.deleteById(id);
+    @Transactional
+    public void boardDelete(Integer id) {
+        BoardEntity board = boardRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다. ID: " + id));
+
+        commentRepository.deleteByBoardEntity(board);
+        System.out.println("댓글이 먼저 삭제되었습니다.");
+
+        boardRepository.delete(board);
+        System.out.println("이후에 게시물도 같이 삭제되었습니다.");
     }
 
     // 게시판 검색+페이징

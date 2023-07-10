@@ -26,8 +26,8 @@ public class CommentService {
         return commentRepository.save(commentEntity);
     }
     //댓글 삭제
-    public void deleteById(Integer boardId) {
-        commentRepository.deleteById(boardId);
+    public void deleteById(Integer id) {
+        commentRepository.deleteById(id);
     }
 
 }

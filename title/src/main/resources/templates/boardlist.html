@@ -58,14 +58,14 @@
 
     <div class="btn-group" role="group">
         <a th:if="${startPage > 1}" th:href="@{/list(page=0, searchKeyword=${param.searchKeyword})}" class="btn btn-light">처음</a> <!-- 추가: 처음 버튼 -->
-        <a th:if="${Previous}" th:href="@{/list(page = ${CurrentPage - 2}, searchKeyword=${param.searchKeyword})}" class="btn btn-light">이전</a>
+        <a th:if="${Previous}" th:href="@{/list(page = ${CurrentPage - 1}, searchKeyword=${param.searchKeyword})}" class="btn btn-light">이전</a>
         <span th:each="page : ${#numbers.sequence(startPage, endPage)}">
-            <a th:if="${page != CurrentPage}" th:href="@{/list(page = ${page - 1}, searchKeyword=${param.searchKeyword})}" th:text="${page}" class="btn btn-light">
+            <a th:if="${page != CurrentPage}" th:href="@{/list(page = ${page}, searchKeyword=${param.searchKeyword})}" th:text="${page}" class="btn btn-light">
             </a>
             <strong th:if="${page == CurrentPage}" th:text="${page}" class="btn btn-primary"></strong>
         </span>
-        <a th:if="${Next}" th:href="@{/list(page = ${CurrentPage},searchKeyword= ${param.searchKeyword})}" class="btn btn-light">다음</a>
-        <a th:if="${endPage < list.getTotalPages()}" th:href="@{/list(page=${list.getTotalPages() - 1}, searchKeyword=${param.searchKeyword})}" class="btn btn-light">마지막</a> <!-- 추가: 마지막 버튼 -->
+        <a th:if="${Next}" th:href="@{/list(page = ${CurrentPage + 1},searchKeyword= ${param.searchKeyword})}" class="btn btn-light">다음</a>
+        <a th:if="${endPage < list.getTotalPages()}" th:href="@{/list(page=${list.getTotalPages()}, searchKeyword=${param.searchKeyword})}" class="btn btn-light">마지막</a> <!-- 추가: 마지막 버튼 -->
     </div>
     <div class="btn" style="margin-right: 100px;">
         <form th:action="@{/write}" method="get">

@@ -66,8 +66,8 @@ public class BoardController{
 
 
         int CurrentPage = list.getPageable().getPageNumber() + 1 ;
-        int startPage = Math.max(CurrentPage - 4 , 1);
-        int endPage = Math.min(startPage + 5, list.getTotalPages());
+        int startPage = Math.max(CurrentPage - 1 , 1);
+        int endPage = Math.min(startPage + 3, list.getTotalPages());
 
         boolean Previous = CurrentPage > 1;
         boolean Next = CurrentPage < list.getTotalPages() && CurrentPage < endPage;
