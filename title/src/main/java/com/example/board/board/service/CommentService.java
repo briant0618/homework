@@ -14,13 +14,13 @@ public class CommentService {
     private CommentRepository commentRepository;
 
 
-
+    // Board의 id를 찾아서 댓글이 어딧는지 찾기
     public CommentEntity boardIdFinder(Integer boardId){
         return commentRepository.findById(boardId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 댓글이 존재하지 않습니다. boardId=" + boardId));
     }
 
-    //
+    //댓글 저장
     public CommentEntity saveComment(CommentEntity commentEntity){
         commentEntity.setDateSaver(LocalDateTime.now());
         return commentRepository.save(commentEntity);

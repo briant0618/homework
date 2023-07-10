@@ -37,7 +37,7 @@
                         </table>
                         <div class="d-flex justify-content-end" role="group" aria-label="Basic outlined example">
                                 <button type="submit" class="btn btn-outline-dark">저장</button>
-                            <button type="button" class="btn btn-outline-dark" onclick="window.location.href='/boardview'">취소</button>
+                            <button type="button" class="btn btn-outline-dark" onclick="cancel()">취소</button>
                         </div>
                     </form>
                 </div>
@@ -46,5 +46,19 @@
     </div>
 </div>
 
+<script>
+    // 취소 버튼 눌렀을때 id/page/searchKeyword 다 받고 상세페이지 되돌아가기
+    function cancel() {
+        var boardId = [[${board.id}]];
+        var page = [[${param.page != null ? param.page : 0}]];
+        var searchKeyword = '[[${param.searchKeyword}]]';
+
+        var encodedPage = encodeURIComponent(page);
+        var encodedSearchKeyword = encodeURIComponent(searchKeyword);
+
+        var redirectUrl = "/boardview/" + boardId + "?page=" + encodedPage + "&searchKeyword=" + encodedSearchKeyword;
+        window.location.href = redirectUrl;
+    }
+</script>
 </body>
 </html>

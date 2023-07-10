@@ -138,7 +138,7 @@
                             <textarea id="content" name="content" rows="4" cols="50" th:field="*{content}"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">댓글 등록</button>
-                        <button type="button" class="btn btn-primary" onclick="window.history.back()">취소</button>
+                        <button type="button" class="btn btn-primary" onclick="cancelContent()">취소</button>
                     </form>
                 </div>
             </div>
@@ -159,6 +159,10 @@
         let ranNum = Math.floor(Math.random() * imgArr.length);
         slide.src = imgArr[ranNum];
     });
+    function cancelContent() {
+        document.getElementById("name").value = "";
+        document.getElementById("content").value = "";
+    }
 </script>
 
 </body>

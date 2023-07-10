@@ -26,7 +26,7 @@ public class CommentController {
     public String addComment(@ModelAttribute CommentEntity commentEntity,
                              @PathVariable("boardId") Integer boardId,
                              @RequestParam(value="page", defaultValue = "0") int page,
-                             @RequestParam(value="searchKeyword", defaultValue = "") String searchKeyword) {
+                             @RequestParam(value="searchKeyword", required = false) String searchKeyword) {
         BoardEntity boardEntity = boardService.boardView(boardId);
         commentEntity.setBoard(boardEntity);
         commentService.saveComment(commentEntity);
@@ -40,7 +40,7 @@ public class CommentController {
     @PostMapping("/deleteComment/{commentId}")
     public String deleteComment(@PathVariable("commentId") Integer commentId,
                                 @RequestParam(value = "page", defaultValue = "0") int page,
-                                @RequestParam(value = "searchKeyword", defaultValue = "") String searchKeyword) {
+                                @RequestParam(value = "searchKeyword", required = false) String searchKeyword) {
         CommentEntity commentEntity = commentService.boardIdFinder(commentId);
         Integer boardId = commentEntity.getBoardEntity().getId();
         commentService.deleteById(commentId);
