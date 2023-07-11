@@ -1,0 +1,31 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+a {
+    color: rebeccapurple;
+    text-decoration: none;
+}
+body {
+    background-image: url("../img/travelkoko.jpg");
+    background-size: 100% auto;
+}
+.fool{
+    height: 100px;
+}
+.fool > h1{
+    padding-top: 30px;
+}
+.contentTable {
+    width: 800px;
+    margin: auto;
+}
+.contentTable table{
+    width:700px;
+}
+.input-group-sm {
+    width: 150px;
+}
+td.textbox{
+    height: 150px;
+}
